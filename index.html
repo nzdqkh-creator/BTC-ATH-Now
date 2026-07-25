@@ -149,6 +149,7 @@
             font-weight: 400;
         }
 
+        /* Verhindert Spinner-Pfeile bei number input */
         .input-field::-webkit-outer-spin-button,
         .input-field::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -293,31 +294,6 @@
         .error-message.show {
             display: block;
         }
-
-        /* Quick action buttons */
-        .quick-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .quick-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-        }
-
-        .quick-btn:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.1);
-        }
     </style>
 </head>
 <body>
@@ -332,15 +308,8 @@
         <div class="input-section">
             <label class="input-label">💰 Betrag mit Ratio multiplizieren</label>
             <div class="input-row">
-                <input type="number" class="input-field" id="multiplierInput" placeholder="Zahl eingeben..." step="0.01" min="0">
+                <input type="text" class="input-field" id="multiplierInput" placeholder="Nur Zahlen eingeben..." inputmode="decimal">
                 <button class="multiply-btn" onclick="calculateMultiplier()">✕ Ratio</button>
-            </div>
-            <div class="quick-actions">
-                <button class="quick-btn" onclick="setQuickValue(1)">1×</button>
-                <button class="quick-btn" onclick="setQuickValue(10)">10×</button>
-                <button class="quick-btn" onclick="setQuickValue(100)">100×</button>
-                <button class="quick-btn" onclick="setQuickValue(1000)">1.000×</button>
-                <button class="quick-btn" onclick="clearInput()">× Löschen</button>
             </div>
         </div>
 
@@ -379,20 +348,20 @@
 
         let currentPriceData = null;
 
-        function setQuickValue(value) {
-            multiplierInput.value = value;
-            calculateMultiplier();
-        }
-
-        function clearInput() {
-            multiplierInput.value = '';
-            calculateMultiplier();
-        }
-
         function calculateMultiplier() {
-            const inputValue = parseFloat(multiplierInput.value);
+            // Clean input: Nur Zahlen und Punkt erlauben
+            let rawValue = multiplierInput.value.replace(/[^0-9.]/g, '');
+            
+            // Verhindern von mehreren Punkten
+            const parts = rawValue.split('.');
+            if (parts.length > 2) {
+                rawValue = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            multiplierInput.value = rawValue;
+            
+            const inputValue = parseFloat(rawValue);
             if (isNaN(inputValue) || inputValue <= 0 || !currentPriceData) {
-                // Show empty state
                 document.querySelectorAll('.multiplied-result').forEach(el => {
                     el.textContent = '–';
                     el.className = 'multiplied-result empty';
@@ -449,7 +418,8 @@
                     else if (ratio < 1.5) ratioClass = 'low';
 
                     // Get current multiplier result if exists
-                    const inputValue = parseFloat(multiplierInput.value);
+                    const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
+                    const inputValue = parseFloat(cleanValue);
                     const multiplierResult = (!isNaN(inputValue) && inputValue > 0) ? 
                         (inputValue * ratio).toFixed(2) : null;
 
@@ -476,7 +446,8 @@
                 currentPriceData = priceData;
 
                 // Recalculate if there's a value in input
-                if (multiplierInput.value && !isNaN(parseFloat(multiplierInput.value))) {
+                const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
+                if (cleanValue && !isNaN(parseFloat(cleanValue))) {
                     calculateMultiplier();
                 }
 
@@ -523,7 +494,8 @@
                     if (info.ratio > 2.5) ratioClass = 'high';
                     else if (info.ratio < 1.5) ratioClass = 'low';
 
-                    const inputValue = parseFloat(multiplierInput.value);
+                    const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
+                    const inputValue = parseFloat(cleanValue);
                     const multiplierResult = (!isNaN(inputValue) && inputValue > 0) ? 
                         (inputValue * info.ratio).toFixed(2) : null;
 
@@ -548,7 +520,8 @@
             });
             if (html) {
                 priceContainer.innerHTML = html;
-                if (multiplierInput.value && !isNaN(parseFloat(multiplierInput.value))) {
+                const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
+                if (cleanValue && !isNaN(parseFloat(cleanValue))) {
                     calculateMultiplier();
                 }
             }
@@ -560,10 +533,36 @@
             return `${symbol} ${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
-        // Event listener for real-time calculation
-        multiplierInput.addEventListener('input', calculateMultiplier);
+        // Input-Validierung: Nur Zahlen und Punkt
+        multiplierInput.addEventListener('input', function(e) {
+            // Erlaubt nur Zahlen und Punkt
+            let value = this.value.replace(/[^0-9.]/g, '');
+            
+            // Verhindert mehrere Punkte
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            this.value = value;
+            calculateMultiplier();
+        });
+
+        // Enter-Taste für Berechnung
         multiplierInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
+                calculateMultiplier();
+            }
+        });
+
+        // Verhindert Komma und Buchstaben beim Einfügen
+        multiplierInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const cleaned = text.replace(/[^0-9.]/g, '');
+            if (cleaned) {
+                this.value = cleaned;
                 calculateMultiplier();
             }
         });
