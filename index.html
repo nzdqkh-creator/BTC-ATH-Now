@@ -50,7 +50,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         h1 {
@@ -101,16 +101,98 @@
             to { transform: rotate(360deg); }
         }
 
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .input-field:focus {
+            border-color: #f7931a;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+        }
+
+        .input-field::-webkit-outer-spin-button,
+        .input-field::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-field[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .multiply-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44b39d);
+            border: none;
+            color: #1a1a2e;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            touch-action: manipulation;
+        }
+
+        .multiply-btn:active {
+            transform: scale(0.95);
+        }
+
         .price-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 14px;
             padding: 14px;
             margin-bottom: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
 
         .price-card:last-child {
             margin-bottom: 16px;
+        }
+
+        .price-card.highlight {
+            border-color: rgba(247, 147, 26, 0.3);
+            background: rgba(247, 147, 26, 0.05);
         }
 
         .currency-header {
@@ -175,6 +257,20 @@
             color: #ff6b6b;
         }
 
+        .multiplied-result {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4ecdc4;
+            text-align: right;
+            padding: 4px 0;
+        }
+
+        .multiplied-result.empty {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: 400;
+            font-size: 16px;
+        }
+
         .last-updated {
             text-align: center;
             font-size: 11px;
@@ -197,6 +293,31 @@
         .error-message.show {
             display: block;
         }
+
+        /* Quick action buttons */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .quick-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -206,6 +327,21 @@
             <button class="update-btn" id="updateBtn" onclick="updatePrices()">
                 <span id="btnText">⟳ Update</span>
             </button>
+        </div>
+
+        <div class="input-section">
+            <label class="input-label">💰 Betrag mit Ratio multiplizieren</label>
+            <div class="input-row">
+                <input type="number" class="input-field" id="multiplierInput" placeholder="Zahl eingeben..." step="0.01" min="0">
+                <button class="multiply-btn" onclick="calculateMultiplier()">✕ Ratio</button>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="setQuickValue(1)">1×</button>
+                <button class="quick-btn" onclick="setQuickValue(10)">10×</button>
+                <button class="quick-btn" onclick="setQuickValue(100)">100×</button>
+                <button class="quick-btn" onclick="setQuickValue(1000)">1.000×</button>
+                <button class="quick-btn" onclick="clearInput()">× Löschen</button>
+            </div>
         </div>
 
         <div class="error-message" id="errorMsg">
@@ -239,6 +375,48 @@
         const errorMsg = document.getElementById('errorMsg');
         const updateBtn = document.getElementById('updateBtn');
         const btnText = document.getElementById('btnText');
+        const multiplierInput = document.getElementById('multiplierInput');
+
+        let currentPriceData = null;
+
+        function setQuickValue(value) {
+            multiplierInput.value = value;
+            calculateMultiplier();
+        }
+
+        function clearInput() {
+            multiplierInput.value = '';
+            calculateMultiplier();
+        }
+
+        function calculateMultiplier() {
+            const inputValue = parseFloat(multiplierInput.value);
+            if (isNaN(inputValue) || inputValue <= 0 || !currentPriceData) {
+                // Show empty state
+                document.querySelectorAll('.multiplied-result').forEach(el => {
+                    el.textContent = '–';
+                    el.className = 'multiplied-result empty';
+                });
+                document.querySelectorAll('.price-card').forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                return;
+            }
+
+            document.querySelectorAll('.price-card').forEach((card, index) => {
+                const currency = CURRENCIES[index];
+                const data = currentPriceData[currency];
+                if (data) {
+                    const result = (inputValue * data.ratio).toFixed(2);
+                    const resultEl = card.querySelector('.multiplied-result');
+                    if (resultEl) {
+                        resultEl.textContent = `${result}×`;
+                        resultEl.className = 'multiplied-result';
+                    }
+                    card.classList.add('highlight');
+                }
+            });
+        }
 
         async function updatePrices() {
             updateBtn.disabled = true;
@@ -262,14 +440,18 @@
                 CURRENCIES.forEach(currency => {
                     const ath = marketData.ath[currency];
                     const current = marketData.current_price[currency];
-                    const ratio = (ath / current).toFixed(3);
+                    const ratio = (ath / current);
 
                     priceData[currency] = { ath, current, ratio };
 
-                    // Ratio color coding
                     let ratioClass = 'medium';
                     if (ratio > 2.5) ratioClass = 'high';
                     else if (ratio < 1.5) ratioClass = 'low';
+
+                    // Get current multiplier result if exists
+                    const inputValue = parseFloat(multiplierInput.value);
+                    const multiplierResult = (!isNaN(inputValue) && inputValue > 0) ? 
+                        (inputValue * ratio).toFixed(2) : null;
 
                     html += `
                         <div class="price-card">
@@ -280,13 +462,23 @@
                             <div class="current-price">${formatCurrency(current, currency)}</div>
                             <div class="ratio-row">
                                 <span class="ratio-label">📊 ATH / Current Ratio</span>
-                                <span class="ratio-value ${ratioClass}">${ratio}</span>
+                                <span class="ratio-value ${ratioClass}">${ratio.toFixed(3)}</span>
+                            </div>
+                            <div class="ratio-row" style="border-top: none; padding-top: 4px; margin-top: 0;">
+                                <span class="ratio-label" style="color: rgba(255, 255, 255, 0.3);">✕ Multipliziert</span>
+                                <span class="multiplied-result ${multiplierResult ? '' : 'empty'}">${multiplierResult ? multiplierResult + '×' : '–'}</span>
                             </div>
                         </div>
                     `;
                 });
 
                 priceContainer.innerHTML = html;
+                currentPriceData = priceData;
+
+                // Recalculate if there's a value in input
+                if (multiplierInput.value && !isNaN(parseFloat(multiplierInput.value))) {
+                    calculateMultiplier();
+                }
 
                 // Cache data
                 try {
@@ -322,12 +514,18 @@
             if (!data.data) return;
 
             let html = '';
+            currentPriceData = data.data;
+
             CURRENCIES.forEach(currency => {
                 const info = data.data[currency];
                 if (info) {
                     let ratioClass = 'medium';
                     if (info.ratio > 2.5) ratioClass = 'high';
                     else if (info.ratio < 1.5) ratioClass = 'low';
+
+                    const inputValue = parseFloat(multiplierInput.value);
+                    const multiplierResult = (!isNaN(inputValue) && inputValue > 0) ? 
+                        (inputValue * info.ratio).toFixed(2) : null;
 
                     html += `
                         <div class="price-card">
@@ -338,13 +536,22 @@
                             <div class="current-price">${formatCurrency(info.current, currency)}</div>
                             <div class="ratio-row">
                                 <span class="ratio-label">📊 ATH / Current Ratio</span>
-                                <span class="ratio-value ${ratioClass}">${info.ratio}</span>
+                                <span class="ratio-value ${ratioClass}">${info.ratio.toFixed(3)}</span>
+                            </div>
+                            <div class="ratio-row" style="border-top: none; padding-top: 4px; margin-top: 0;">
+                                <span class="ratio-label" style="color: rgba(255, 255, 255, 0.3);">✕ Multipliziert</span>
+                                <span class="multiplied-result ${multiplierResult ? '' : 'empty'}">${multiplierResult ? multiplierResult + '×' : '–'}</span>
                             </div>
                         </div>
                     `;
                 }
             });
-            if (html) priceContainer.innerHTML = html;
+            if (html) {
+                priceContainer.innerHTML = html;
+                if (multiplierInput.value && !isNaN(parseFloat(multiplierInput.value))) {
+                    calculateMultiplier();
+                }
+            }
         }
 
         function formatCurrency(value, currency) {
@@ -352,6 +559,14 @@
             const symbol = CURRENCY_SYMBOLS[currency] || currency.toUpperCase();
             return `${symbol} ${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
+
+        // Event listener for real-time calculation
+        multiplierInput.addEventListener('input', calculateMultiplier);
+        multiplierInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                calculateMultiplier();
+            }
+        });
 
         // Load cached data
         try {
