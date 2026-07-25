@@ -6,14 +6,19 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="data:application/json,{
-        &quot;name&quot;:&quot;BTC Tracker&quot;,
-        &quot;short_name&quot;:&quot;BTC&quot;,
-        &quot;display&quot;:&quot;standalone&quot;,
-        &quot;start_url&quot;:&quot;.&quot;,
-        &quot;background_color&quot;:&quot;#1a1a2e&quot;,
-        &quot;theme_color&quot;:&quot;#f7931a&quot;
-    }">
+    <meta name="apple-mobile-web-app-title" content="BTC Tracker">
+    
+    <!-- Standard Favicon -->
+    <link rel="icon" type="image/png" sizes="40x40" href="icon.png">
+    <link rel="shortcut icon" href="icon.png">
+    
+    <!-- Apple Touch Icon für iOS -->
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" sizes="40x40" href="icon.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <title>BTC Tracker</title>
     <style>
         * {
@@ -149,7 +154,6 @@
             font-weight: 400;
         }
 
-        /* Verhindert Spinner-Pfeile bei number input */
         .input-field::-webkit-outer-spin-button,
         .input-field::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -349,10 +353,8 @@
         let currentPriceData = null;
 
         function calculateMultiplier() {
-            // Clean input: Nur Zahlen und Punkt erlauben
             let rawValue = multiplierInput.value.replace(/[^0-9.]/g, '');
             
-            // Verhindern von mehreren Punkten
             const parts = rawValue.split('.');
             if (parts.length > 2) {
                 rawValue = parts[0] + '.' + parts.slice(1).join('');
@@ -417,7 +419,6 @@
                     if (ratio > 2.5) ratioClass = 'high';
                     else if (ratio < 1.5) ratioClass = 'low';
 
-                    // Get current multiplier result if exists
                     const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
                     const inputValue = parseFloat(cleanValue);
                     const multiplierResult = (!isNaN(inputValue) && inputValue > 0) ? 
@@ -445,13 +446,11 @@
                 priceContainer.innerHTML = html;
                 currentPriceData = priceData;
 
-                // Recalculate if there's a value in input
                 const cleanValue = multiplierInput.value.replace(/[^0-9.]/g, '');
                 if (cleanValue && !isNaN(parseFloat(cleanValue))) {
                     calculateMultiplier();
                 }
 
-                // Cache data
                 try {
                     localStorage.setItem('btcPrices', JSON.stringify({
                         data: priceData,
@@ -466,7 +465,6 @@
                 console.error('Error:', error);
                 errorMsg.classList.add('show');
 
-                // Load from cache
                 try {
                     const cached = localStorage.getItem('btcPrices');
                     if (cached) {
@@ -533,12 +531,9 @@
             return `${symbol} ${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
-        // Input-Validierung: Nur Zahlen und Punkt
         multiplierInput.addEventListener('input', function(e) {
-            // Erlaubt nur Zahlen und Punkt
             let value = this.value.replace(/[^0-9.]/g, '');
             
-            // Verhindert mehrere Punkte
             const parts = value.split('.');
             if (parts.length > 2) {
                 value = parts[0] + '.' + parts.slice(1).join('');
@@ -548,7 +543,6 @@
             calculateMultiplier();
         });
 
-        // Enter-Taste für Berechnung
         multiplierInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -556,7 +550,6 @@
             }
         });
 
-        // Verhindert Komma und Buchstaben beim Einfügen
         multiplierInput.addEventListener('paste', function(e) {
             e.preventDefault();
             const text = (e.clipboardData || window.clipboardData).getData('text');
@@ -567,7 +560,6 @@
             }
         });
 
-        // Load cached data
         try {
             const cached = localStorage.getItem('btcPrices');
             if (cached) {
