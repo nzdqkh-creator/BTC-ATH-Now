@@ -1,0 +1,24 @@
+{
+  "name": "BTC Tracker",
+  "short_name": "BTC",
+  "description": "Bitcoin Preis Tracker mit 5 Währungen",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "40x40",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "40x40",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    }
+  ]
+}
