@@ -40,7 +40,7 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
-            padding: 24px;
+            padding: 20px;
             width: 100%;
             max-width: 420px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -50,11 +50,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             background: linear-gradient(90deg, #f7931a, #f8b84a);
             -webkit-background-clip: text;
@@ -66,19 +66,19 @@
             background: linear-gradient(135deg, #f7931a, #f8b84a);
             border: none;
             color: #1a1a2e;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 50px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(247, 147, 26, 0.3);
             touch-action: manipulation;
+            white-space: nowrap;
         }
 
         .update-btn:active {
             transform: scale(0.95);
-            box-shadow: 0 2px 10px rgba(247, 147, 26, 0.2);
         }
 
         .update-btn:disabled {
@@ -88,8 +88,8 @@
 
         .loading-spinner {
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border: 3px solid rgba(26, 26, 46, 0.3);
             border-radius: 50%;
             border-top-color: #1a1a2e;
@@ -103,60 +103,83 @@
 
         .price-card {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .price-card:last-child {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .currency-label {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 4px;
+        .currency-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
         }
 
-        .currency-value {
-            font-size: 20px;
+        .currency-name {
+            font-size: 16px;
             font-weight: 600;
             color: #fff;
-            letter-spacing: 0.5px;
+        }
+
+        .ath-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
         }
 
         .ath-value {
             color: #f7931a;
+            font-weight: 600;
         }
 
-        .ratio-box {
-            background: rgba(247, 147, 26, 0.1);
-            border: 1px solid rgba(247, 147, 26, 0.2);
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
+        .current-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin: 4px 0 6px 0;
+        }
+
+        .ratio-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 8px;
+            margin-top: 4px;
         }
 
         .ratio-label {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
         }
 
         .ratio-value {
-            font-size: 28px;
+            font-size: 16px;
             font-weight: 700;
-            color: #f7931a;
+            color: #f8b84a;
+        }
+
+        .ratio-value.high {
+            color: #4ecdc4;
+        }
+
+        .ratio-value.medium {
+            color: #f8b84a;
+        }
+
+        .ratio-value.low {
+            color: #ff6b6b;
         }
 
         .last-updated {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: rgba(255, 255, 255, 0.3);
-            margin-top: 16px;
+            margin-top: 12px;
         }
 
         .error-message {
@@ -166,7 +189,7 @@
             padding: 12px;
             margin-bottom: 16px;
             color: #ff6b6b;
-            font-size: 14px;
+            font-size: 13px;
             text-align: center;
             display: none;
         }
@@ -181,20 +204,15 @@
         <div class="header">
             <h1>₿ BTC Tracker</h1>
             <button class="update-btn" id="updateBtn" onclick="updatePrices()">
-                <span id="btnText">⟳ Aktualisieren</span>
+                <span id="btnText">⟳ Update</span>
             </button>
         </div>
 
         <div class="error-message" id="errorMsg">
-            ⚠️ Fehler beim Laden der Daten. Bitte versuche es erneut.
+            ⚠️ Fehler beim Laden. Bitte erneut versuchen.
         </div>
 
         <div id="priceContainer"></div>
-
-        <div class="ratio-box">
-            <div class="ratio-label">📊 ATH / Current Ratio</div>
-            <div class="ratio-value" id="ratio">–</div>
-        </div>
 
         <div class="last-updated" id="lastUpdated">Letztes Update: –</div>
     </div>
@@ -208,20 +226,23 @@
             jpy: '¥',
             chf: 'Fr.'
         };
+        const CURRENCY_NAMES = {
+            eur: 'Euro',
+            usd: 'US Dollar',
+            gbp: 'Pfund Sterling',
+            jpy: 'Japanischer Yen',
+            chf: 'Schweizer Franken'
+        };
 
         const priceContainer = document.getElementById('priceContainer');
-        const ratioElement = document.getElementById('ratio');
         const lastUpdatedElement = document.getElementById('lastUpdated');
         const errorMsg = document.getElementById('errorMsg');
         const updateBtn = document.getElementById('updateBtn');
         const btnText = document.getElementById('btnText');
 
-        let currentPrices = null;
-
         async function updatePrices() {
-            // Disable button and show loading
             updateBtn.disabled = true;
-            btnText.innerHTML = '<span class="loading-spinner"></span> Laden...';
+            btnText.innerHTML = '<span class="loading-spinner"></span>';
             errorMsg.classList.remove('show');
 
             try {
@@ -235,103 +256,95 @@
                 const data = await response.json();
                 const marketData = data.market_data;
 
-                // Store prices
-                currentPrices = {
-                    ath: {},
-                    current: {}
-                };
-
                 let html = '';
-                let athTotal = 0;
-                let currentTotal = 0;
+                const priceData = {};
 
                 CURRENCIES.forEach(currency => {
                     const ath = marketData.ath[currency];
                     const current = marketData.current_price[currency];
+                    const ratio = (ath / current).toFixed(3);
 
-                    currentPrices.ath[currency] = ath;
-                    currentPrices.current[currency] = current;
+                    priceData[currency] = { ath, current, ratio };
 
-                    athTotal += ath;
-                    currentTotal += current;
+                    // Ratio color coding
+                    let ratioClass = 'medium';
+                    if (ratio > 2.5) ratioClass = 'high';
+                    else if (ratio < 1.5) ratioClass = 'low';
 
                     html += `
                         <div class="price-card">
-                            <div class="currency-label">
-                                <span>${currency.toUpperCase()}</span>
-                                <span>ATH: <strong class="ath-value">${formatCurrency(ath, currency)}</strong></span>
+                            <div class="currency-header">
+                                <span class="currency-name">${CURRENCY_NAMES[currency]}</span>
+                                <span class="ath-label">ATH: <span class="ath-value">${formatCurrency(ath, currency)}</span></span>
                             </div>
-                            <div class="currency-value">${formatCurrency(current, currency)}</div>
+                            <div class="current-price">${formatCurrency(current, currency)}</div>
+                            <div class="ratio-row">
+                                <span class="ratio-label">📊 ATH / Current Ratio</span>
+                                <span class="ratio-value ${ratioClass}">${ratio}</span>
+                            </div>
                         </div>
                     `;
                 });
 
                 priceContainer.innerHTML = html;
 
-                // Calculate ratio based on average
-                const avgRatio = (athTotal / currentTotal).toFixed(3);
-                ratioElement.textContent = avgRatio;
+                // Cache data
+                try {
+                    localStorage.setItem('btcPrices', JSON.stringify({
+                        data: priceData,
+                        timestamp: new Date().toISOString()
+                    }));
+                } catch (e) {}
 
-                // Update timestamp
                 const now = new Date();
                 lastUpdatedElement.textContent = `Letztes Update: ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
 
-                // Cache in localStorage for offline use
-                try {
-                    localStorage.setItem('btcPrices', JSON.stringify({
-                        prices: currentPrices,
-                        ratio: avgRatio,
-                        timestamp: now.toISOString()
-                    }));
-                } catch (e) {
-                    // Ignore localStorage errors
-                }
-
             } catch (error) {
-                console.error('Error fetching prices:', error);
+                console.error('Error:', error);
                 errorMsg.classList.add('show');
 
-                // Try to load from cache
+                // Load from cache
                 try {
                     const cached = localStorage.getItem('btcPrices');
                     if (cached) {
                         const data = JSON.parse(cached);
                         displayCachedData(data);
-                        lastUpdatedElement.textContent = `⚠️ Offline-Modus (${new Date(data.timestamp).toLocaleTimeString('de-DE')})`;
+                        lastUpdatedElement.textContent = `⚠️ Offline (${new Date(data.timestamp).toLocaleTimeString('de-DE')})`;
                     }
-                } catch (e) {
-                    // Ignore cache errors
-                }
+                } catch (e) {}
             } finally {
-                // Re-enable button
                 updateBtn.disabled = false;
-                btnText.textContent = '⟳ Aktualisieren';
+                btnText.textContent = '⟳ Update';
             }
         }
 
         function displayCachedData(data) {
-            if (!data.prices) return;
+            if (!data.data) return;
 
             let html = '';
             CURRENCIES.forEach(currency => {
-                const ath = data.prices.ath[currency];
-                const current = data.prices.current[currency];
-                if (ath && current) {
+                const info = data.data[currency];
+                if (info) {
+                    let ratioClass = 'medium';
+                    if (info.ratio > 2.5) ratioClass = 'high';
+                    else if (info.ratio < 1.5) ratioClass = 'low';
+
                     html += `
                         <div class="price-card">
-                            <div class="currency-label">
-                                <span>${currency.toUpperCase()}</span>
-                                <span>ATH: <strong class="ath-value">${formatCurrency(ath, currency)}</strong></span>
+                            <div class="currency-header">
+                                <span class="currency-name">${CURRENCY_NAMES[currency]}</span>
+                                <span class="ath-label">ATH: <span class="ath-value">${formatCurrency(info.ath, currency)}</span></span>
                             </div>
-                            <div class="currency-value">${formatCurrency(current, currency)}</div>
+                            <div class="current-price">${formatCurrency(info.current, currency)}</div>
+                            <div class="ratio-row">
+                                <span class="ratio-label">📊 ATH / Current Ratio</span>
+                                <span class="ratio-value ${ratioClass}">${info.ratio}</span>
+                            </div>
                         </div>
                     `;
                 }
             });
-            if (html) {
-                priceContainer.innerHTML = html;
-                ratioElement.textContent = data.ratio || '–';
-            }
+            if (html) priceContainer.innerHTML = html;
         }
 
         function formatCurrency(value, currency) {
@@ -340,7 +353,7 @@
             return `${symbol} ${value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
-        // Load cached data immediately
+        // Load cached data
         try {
             const cached = localStorage.getItem('btcPrices');
             if (cached) {
@@ -348,14 +361,9 @@
                 displayCachedData(data);
                 lastUpdatedElement.textContent = `Letztes Update: ${new Date(data.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} (gespeichert)`;
             }
-        } catch (e) {
-            // Ignore cache errors
-        }
+        } catch (e) {}
 
-        // Auto-update on load
         updatePrices();
-
-        // Update every 60 seconds
         setInterval(updatePrices, 60000);
     </script>
 </body>
